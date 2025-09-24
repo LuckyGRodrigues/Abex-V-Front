@@ -37,7 +37,7 @@
       errorColor.value = 'red';
       errorMsg.value = '❌ Usuário ou senha incorretos!';
     }
-  }
+  };
 </script>
 
 <style>
