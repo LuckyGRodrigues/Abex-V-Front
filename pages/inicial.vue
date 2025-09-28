@@ -1,6 +1,5 @@
 <template>
   <v-app>
-    <!-- Navigation Drawer -->
     <v-navigation-drawer
       v-model="drawer"
       :permanent="!mobile"
@@ -30,7 +29,6 @@
       </v-list>
     </v-navigation-drawer>
 
-    <!-- App Bar (Mobile only) -->
     <v-app-bar
       v-if="mobile"
       app
@@ -42,22 +40,18 @@
       <v-toolbar-title>Sistema de Gestão</v-toolbar-title>
     </v-app-bar>
 
-    <!-- Main Content -->
     <v-main>
       <v-container fluid class="pa-6">
-        <!-- Welcome Section -->
         <div class="text-center mb-8">
           <h1 class="display-1 font-weight-bold text-grey-darken-3 mb-4">
             Bem vindo, {{ userName }}!
           </h1>
         </div>
 
-        <!-- Shortcuts Section -->
         <h2 class="text-h4 font-weight-bold text-grey-darken-3 mb-6">
           Atalhos
         </h2>
 
-        <!-- Cards Grid -->
         <v-row>
           <v-col
             v-for="shortcut in shortcuts"
@@ -170,7 +164,6 @@ const handleNavigation = async (route) => {
   await navigateTo(route)
 }
 
-// Watch mobile state for drawer optimization - debounced for performance
 watch(mobile, (newVal) => {
   drawer.value = !newVal
 }, { immediate: true })
