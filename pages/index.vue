@@ -5,39 +5,69 @@
       <form @submit.prevent="handleLogin">
         <div class="input-group">
           <span class="icon">👤</span>
-          <input v-model="username" type="text" placeholder="Username" required>
+          <input v-model="email" type="email" placeholder="Email" required>
         </div>
         <div class="input-group">
           <span class="icon">🔒</span>
-          <input v-model="password" type="password" placeholder="Password" required>
+          <input v-model="senha" type="password" placeholder="Senha" required>
         </div>
-        <button type="submit" class="btn">Login</button>
+        <button type="submit" class="btn" :disabled="loading">
+          {{ loading ? 'Carregando...' : 'Login' }}
+        </button>
         <p class="error" :style="{ color: errorColor }">{{ errorMsg }}</p>
       </form>
     </div>
   </div>
 </template>
 
-<script setup>
-  import { ref } from 'vue';
+<script>
+export default {
+  data() {
+    return {
+      email: '',
+      senha: '',
+      errorMsg: '',
+      errorColor: 'red',
+      loading: false,
+    };
+  },
 
-  const username = ref('');
-  const password = ref('');
-  const errorMsg = ref('');
-  const errorColor = ref('red');
+  methods: {
+    async handleLogin() {
+      this.loading = true;
+      this.errorMsg = '';
 
-  function handleLogin() {
-    if (username.value === 'admin' && password.value === '1234') {
-      errorColor.value = 'green';
-      errorMsg.value = '✅ Login realizado com sucesso!';
-      setTimeout(() => {
-        window.location.href = 'home.html';
-      }, 1000);
-    } else {
-      errorColor.value = 'red';
-      errorMsg.value = '❌ Usuário ou senha incorretos!';
-    }
-  };
+      try {
+        const response = await this.$api.post('/usuario/check-password', {
+          email: this.email,
+          senha: this.senha
+        });
+
+        if (response.success) {
+          this.errorColor = 'green';
+          this.errorMsg = '✅ Login realizado com sucesso!';
+          
+          setTimeout(() => {
+            this.$router.push('/inicial');
+          }, 1000);
+        }
+      } catch (error) {
+        this.errorColor = 'red';
+        
+        if (error.response?.status === 404) {
+          this.errorMsg = '❌ Usuário não encontrado!';
+        } else if (error.response?.status === 401) {
+          this.errorMsg = '❌ Senha inválida!';
+        } else {
+          this.errorMsg = '❌ Erro no servidor. Tente novamente!';
+          console.error('Erro no login:', error);
+        }
+      } finally {
+        this.loading = false;
+      }
+    },
+  },
+};
 </script>
 
 <style>
@@ -110,6 +140,11 @@
 
   .btn:hover {
     background: #ff8431;
+  }
+
+  .btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
   }
 
   .error {
