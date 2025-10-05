@@ -11,7 +11,7 @@
 
       <v-dialog v-model="showTabela" max-width="1200">
         <TabelaComponent 
-          titulo="Administradores"
+          titulo="Cliente"
           height="600"
           class="mt-13" 
           :items="items" 

@@ -11,8 +11,8 @@
 
       <v-dialog v-model="showTabela" max-width="1200">
         <TabelaComponent 
-          titulo="Administradores"
-          height="600"
+          titulo="Usuário"
+          height="600" 
           class="mt-13" 
           :items="items" 
           :headers="headers" 
@@ -202,8 +202,8 @@
               key: "nome",
             },
             {   
-              title: "Nome",
-              key: "nome",
+              title: "e-mail",
+              key: "email",
             },
             {
               title: "Telefone",
