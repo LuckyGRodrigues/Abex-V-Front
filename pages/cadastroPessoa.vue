@@ -18,154 +18,25 @@
           :headers="headers" 
           @editou="editItem" 
           @deletou="deleteItem"
-          @abrir-dialog="abrirCriarFromChild" 
-          @dialog-edit="editarFromChild"
+          @abrir-dialog="abrirCriar" 
         />
       </v-dialog>
-      <v-dialog 
-        v-model="ativo"
-        max-width="400"
-      >
-        <v-card 
-          height="650" 
-          width="400" 
-          theme="dark"
-        >
-          <v-card-title>
-            Criar
-          </v-card-title>
-          <v-card-text>
-            <v-row>
-              <v-col>
-                <v-text-field 
-                  v-model="pessoa.nome"
-                  placeholder="Nome"
-                  item-title="label" 
-                  item-value="nome"
-                />
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col>
-                <v-text-field 
-                  v-model="pessoa.email"
-                  placeholder="Email"
-                  item-title="label" 
-                  item-value="email"
-                />
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col>
-                <v-text-field 
-                  v-model="pessoa.telefone"
-                  placeholder="Telefone"
-                  item-title="label" 
-                  item-value="telefone"
-                />
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col>
-                <v-text-field 
-                  v-model="pessoa.empresa"
-                  placeholder="Empresa"
-                  item-title="label" 
-                  item-value="empresa"
-                />
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col>
-                <v-text-field 
-                  v-model="pessoa.cidade"
-                  placeholder="Cidade"
-                  item-title="label" 
-                  item-value="cidade"
-                />
-              </v-col>
-            </v-row>
-          </v-card-text>
-          <v-card-actions>
-            <v-btn variant="outlined" @click="create()">
-              Criar
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
 
-      <v-dialog 
-        v-model="ativo2"
-        max-width="500"
-      >
-        <v-card 
-          height="650" 
-          width="400" 
-          theme="dark"
-        >
-          <v-card-title>
-            Editar
-          </v-card-title>
-          <v-card-text>
-            <v-row>
-              <v-col>
-                <v-text-field 
-                  v-model="pessoa.nome"
-                  placeholder="Nome"
-                  item-title="label" 
-                  item-value="nome"
-                />
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col>
-                <v-text-field 
-                  v-model="pessoa.email"
-                  placeholder="Email"
-                  item-title="label" 
-                  item-value="email"
-                />
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col>
-                <v-text-field 
-                  v-model="pessoa.telefone"
-                  placeholder="Telefone"
-                  item-title="label" 
-                  item-value="telefone"
-                />
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col>
-                <v-text-field 
-                  v-model="pessoa.empresa"
-                  placeholder="Empresa"
-                  item-title="label" 
-                  item-value="empresa"
-                />
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col>
-                <v-text-field 
-                  v-model="pessoa.cidade"
-                  placeholder="Cidade"
-                  item-title="label" 
-                  item-value="cidade"
-                />
-              </v-col>
-            </v-row>
-          </v-card-text>
+      <FormularioComponent
+        :ativo="ativo"
+        :modo-edicao="false"
+        @fechar="fecharFormulario"
+        @salvar="create"
+      />
 
-          <v-card-actions>
-            <v-btn variant="outlined" @click="edit()">
-              Editar
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
+      <FormularioComponent
+        :ativo="ativo2"
+        :modo-edicao="true"
+        :item-edicao="pessoaEdicao"
+        @fechar="fecharFormularioEdicao"
+        @salvar="edit"
+      />
+
     </v-container>
   </div>
 </template>
@@ -182,13 +53,7 @@
           loading: true,
           textoUsuario: null,
           search: "",
-          pessoa: {
-            nome: null,
-            email: null,
-            telefone: null,
-            empresa: null,
-            cidade: null,
-          },
+          pessoaEdicao: null,
           headers: [
             {   
               title: "ID",
@@ -213,16 +78,6 @@
       },
 
       watch: {
-        ativo(valor) {
-          if (valor == false) {
-            this.resetPessoa();
-          }
-        },
-        ativo2(valor) {
-          if (valor == false) {
-            this.resetPessoa();
-          }
-        },
         resetTabela() {
           if (this.loading == false) {
             this.getItems();
@@ -235,31 +90,17 @@
       },
 
       methods: {
-        resetPessoa() {
-          this.pessoa = {
-            nome: null,
-            email: null,
-            telefone: null,
-            empresa: null,
-            cidade: null,
-          };
-          this.ativo = false;
-          this.ativo2 = false;
-        },
-
         abrirCriar() {
           this.ativo = true;
         },
 
-        abrirCriarFromChild() {
-          this.ativo = true;
+        fecharFormulario() {
+          this.ativo = false;
         },
 
-        editarFromChild(item) {
-          if (item) {
-            this.administrador = { ...item };
-          }
-          this.ativo2 = true;
+        fecharFormularioEdicao() {
+          this.ativo2 = false;
+          this.pessoaEdicao = null;
         },
 
         async getItems() {
@@ -276,37 +117,44 @@
         },
 
         editItem(item) {
-          this.pessoa = {
-            ...item,
-          };
+          this.pessoaEdicao = { ...item };
           this.ativo2 = true;
         },
 
-        async create() {
-          await this.$api.post("/pessoa/create", this.pessoa);
-          console.log("Criando item");
-          await this.getItems();
-          this.resetPessoa();
+        async create(dadosFormulario) {
+          try {
+            await this.$api.post("/pessoa/create", dadosFormulario);
+            console.log("Criando item");
+            await this.getItems();
+            this.fecharFormulario();
+          } catch (error) {
+            console.error("Erro ao criar item:", error);
+          }
         },
 
-        async edit() {
-          await this.$api.patch(`/pessoa/update/${this.pessoa.id}`, this.pessoa);
-          console.log("Editando item");
-          await this.getItems();
-          this.resetPessoa();
+        async edit(dadosFormulario) {
+          try {
+            await this.$api.patch(`/pessoa/update/${dadosFormulario.id}`, dadosFormulario);
+            console.log("Editando item");
+            await this.getItems();
+            this.fecharFormularioEdicao();
+          } catch (error) {
+            console.error("Erro ao editar item:", error);
+          }
         },
 
         async deleteItem(item) {
-          if (confirm(`Deseja deletar o registro com cpf ${item.id}`)) {
+          if (confirm(`Deseja deletar o registro com ID ${item.id}?`)) {
             this.loading = true;
             try {
               await this.$api.delete(`/pessoa/delete/${item.id}`);
+              console.log("Deletando item");
+              await this.getItems();
             } catch (error) {
               console.error("Erro ao excluir item:", error);
+            } finally {
+              this.loading = false;
             }
-            console.log("Deletando item");
-            await this.getItems();
-            this.loading = false;
           }
         }
       },
