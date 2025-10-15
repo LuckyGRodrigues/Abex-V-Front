@@ -44,7 +44,7 @@
       <v-container fluid class="pa-6">
         <div class="text-center mb-8">
           <h1 class="display-1 font-weight-bold text-grey-darken-3 mb-4">
-            Bem vindo, {{ userName }}!
+            Bem vindo, teste!
           </h1>
         </div>
 
@@ -85,7 +85,6 @@
           </v-col>
         </v-row>
 
-        <!-- Seção de Cadastro de Pessoas -->
         <v-divider class="my-8" />
 
         <v-dialog v-model="showTabela" max-width="1200">
@@ -116,7 +115,6 @@
           @salvar="edit"
         />
 
-        <!-- Seção de Usuários -->
         <v-divider class="my-8" />
 
         <v-dialog v-model="showTabelaUsuarios" max-width="1200">
@@ -132,7 +130,6 @@
           />
         </v-dialog>
 
-        <!-- Formulário para criar usuário -->
         <FormularioUsuarioComponent
           :ativo="ativoUsuario"
           :modo-edicao="false"
@@ -141,7 +138,6 @@
           @salvar="createUsuario"
         />
 
-        <!-- Formulário para editar usuário -->
         <FormularioUsuarioComponent
           :ativo="ativoUsuario2"
           :modo-edicao="true"
@@ -170,10 +166,9 @@ export default {
   
   data() {
     return {
-      drawer: false, // Inicializa como false
+      drawer: false,
       userName: 'Fulano',
       mobile: false,
-      // Dados do cadastro de pessoas (migrados do cadastroPessoa.vue)
       tab: 1,
       valor: 0,
       showTabela: false,
@@ -183,7 +178,6 @@ export default {
       textoUsuario: null,
       search: "",
       pessoaEdicao: null,
-      // Dados do cadastro de usuários
       showTabelaUsuarios: false,
       ativoUsuario: false,
       ativoUsuario2: false,
@@ -233,7 +227,6 @@ export default {
         },
       ],
       items: [],
-      // Dados originais da tela inicial
       navigationItems: [
         {
           title: 'Clientes',
@@ -300,12 +293,9 @@ export default {
 
   async created() {
     this.checkMobile();
-    // Só carrega os dados se necessário, para evitar erro na inicialização
-    // await this.getItems();
   },
 
   mounted() {
-    // Configura o drawer após o componente estar montado
     this.drawer = !this.mobile;
     window.addEventListener('resize', this.checkMobile);
   },
@@ -317,17 +307,14 @@ export default {
   methods: {
     checkMobile() {
       this.mobile = window.innerWidth < 960;
-      // Atualiza o drawer baseado no estado mobile
-      if (this.$el) { // Verifica se o componente está montado
+      if (this.$el) {
         this.drawer = !this.mobile;
       }
     },
 
     async handleNavigation(route) {
-      // Se for a rota de clientes, abre/fecha a tabela ao invés de navegar
       if (route === '/clientes') {
         this.showTabela = !this.showTabela;
-        // Se estiver abrindo a tabela e não tem dados, carrega os dados
         if (this.showTabela && this.items.length === 0) {
           try {
             await this.getItems();
@@ -336,19 +323,16 @@ export default {
           }
         }
       } else if (route === '/usuarios') {
-        // Se for a rota de usuários, abre/fecha a tabela de usuários
         this.showTabelaUsuarios = !this.showTabelaUsuarios;
-        // Se estiver abrindo a tabela e não tem dados, carrega os dados
         if (this.showTabelaUsuarios && this.itemsUsuarios.length === 0) {
           try {
             await this.getItemsUsuarios();
-            await this.getPessoas(); // Carrega pessoas para o autocomplete
+            await this.getPessoas();
           } catch (error) {
             console.error('Erro ao carregar dados de usuários:', error);
           }
         }
       } else {
-        // Para outras rotas, navega normalmente
         try {
           await this.$router.push(route);
         } catch (error) {
@@ -357,7 +341,6 @@ export default {
       }
     },
 
-    // Métodos migrados do cadastroPessoa.vue
     abrirCriar() {
       this.ativo = true;
     },
@@ -426,7 +409,6 @@ export default {
       }
     },
 
-    // Métodos para usuários
     abrirCriarUsuario() {
       this.ativoUsuario = true;
     },
