@@ -36,13 +36,22 @@
         </v-row>
         <v-row>
           <v-col>
-            <v-text-field 
-              v-model="formulario.senha"
-              placeholder="Senha"
-              type="password"
-              item-title="label" 
-              item-value="senha"
-            />
+            <v-row align="center">
+              <v-col cols="8">
+                <v-text-field
+                  v-model="formulario.senha"
+                  placeholder="Senha"
+                  type="password"
+                  :disabled="modoEdicao && !alterarSenha"
+                />
+              </v-col>
+              <v-col cols="4">
+                <v-checkbox
+                  v-model="alterarSenha"
+                  label="Alterar senha"
+                />
+              </v-col>
+            </v-row>
           </v-col>
         </v-row>
         <v-row>
@@ -62,7 +71,7 @@
               :items="pessoas" 
               placeholder="Pessoa vinculada"
               item-title="nome" 
-              item-value="id"
+              item-value="id_pessoa"
             />
           </v-col>
         </v-row>
@@ -122,6 +131,7 @@ export default {
         senha: null,
         tipo: 'Colaborador',
       },
+      alterarSenha: false,
     };
   },
 
@@ -162,6 +172,9 @@ export default {
       if (this.modoEdicao && this.itemEdicao) {
         // map server fields to form where necessary
         this.formulario = { ...this.itemEdicao };
+        // when editing, don't prefill senha for security; require explicit change
+        this.formulario.senha = '';
+        this.alterarSenha = false;
       } else {
         this.resetFormulario();
       }
@@ -173,9 +186,10 @@ export default {
         idPessoa: null,
         nome: null,
         email: null,
-        senha: null,
+        senha: '',
         tipo: 'Colaborador',
       };
+      this.alterarSenha = !this.modoEdicao; // true for create, false for edit
     },
 
     fecharDialog() {
@@ -183,7 +197,12 @@ export default {
     },
 
     salvar() {
-      this.$emit("salvar", { ...this.formulario });
+      const payload = { ...this.formulario };
+      // if in edit mode and user didn't opt to change password, don't include senha
+      if (this.modoEdicao && !this.alterarSenha) {
+        delete payload.senha;
+      }
+      this.$emit("salvar", payload);
     },
   },
 };

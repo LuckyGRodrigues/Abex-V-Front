@@ -16,6 +16,14 @@
         <v-row>
           <v-col>
             <v-text-field 
+              v-model="formulario.cpfCnpj"
+              placeholder="CPF/CNPJ"
+              item-title="label" 
+              item-value="cpfCnpj"
+            />
+          </v-col>
+          <v-col>
+            <v-text-field 
               v-model="formulario.nome"
               placeholder="Nome"
               item-title="label" 
@@ -64,6 +72,16 @@
             />
           </v-col>
         </v-row>
+        <v-row>
+          <v-col>
+            <v-select
+              v-model="formulario.tipo"
+              :items="['Cliente','Colaborador','Fornecedor']"
+              label="Tipo"
+              disabled
+            />
+          </v-col>
+        </v-row>
       </v-card-text>
       <v-card-actions>
         <v-btn 
@@ -109,11 +127,14 @@ export default {
     return {
       loading: false,
       formulario: {
+        id_pessoa: null,
+        cpfCnpj: null,
         nome: null,
         email: null,
         telefone: null,
         empresa: null,
         cidade: null,
+        tipo: 'Cliente',
       },
     };
   },
@@ -153,19 +174,32 @@ export default {
   methods: {
     carregarDados() {
       if (this.modoEdicao && this.itemEdicao) {
-        this.formulario = { ...this.itemEdicao };
+        // map server fields to form fields
+        this.formulario = {
+          id_pessoa: this.itemEdicao.id_pessoa || this.itemEdicao.id || null,
+          cpfCnpj: this.itemEdicao.cpfCnpj || this.itemEdicao.cpf || null,
+          nome: this.itemEdicao.nome || null,
+          email: this.itemEdicao.email || null,
+          telefone: this.itemEdicao.telefone || null,
+          empresa: this.itemEdicao.empresa || null,
+          cidade: this.itemEdicao.cidade || null,
+          tipo: this.itemEdicao.tipo || 'Cliente',
+        };
       } else {
         this.resetFormulario();
       }
     },
 
     resetFormulario() {
-      this.formulario = {
+        this.formulario = {
+        id_pessoa: null,
+        cpfCnpj: null,
         nome: null,
         email: null,
         telefone: null,
         empresa: null,
         cidade: null,
+        tipo: 'Cliente',
       };
     },
 
@@ -174,7 +208,8 @@ export default {
     },
 
     salvar() {
-      this.$emit("salvar", { ...this.formulario });
+      // Enviar ambos os formatos (snake_case e camelCase) para compatibilidade
+      this.$emit("salvar", { ...this.formulario, cpfCnpj: this.formulario.cpfCnpj });
     },
   },
 };

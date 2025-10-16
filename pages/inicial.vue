@@ -225,46 +225,21 @@ export default {
       pessoas: [],
       itemsUsuarios: [],
       headersUsuarios: [
-        {   
-          title: "ID",
-          key: "id",
-        },
-        {   
-          title: "Nome",
-          key: "nome",
-        },
-        {   
-          title: "E-mail",
-          key: "email",
-        },
-        {
-          title: "Telefone",
-          key: "telefone",
-        },
-        {
-          title: "",
-          key: "action",  
-          sortable: false,
-        },
+        { title: 'ID', key: 'id_usuario' },
+        { title: 'Pessoa', key: 'id_pessoa' },
+        { title: 'Nome', key: 'nome' },
+        { title: 'E-mail', key: 'email' },
+        { title: 'Tipo', key: 'tipo' },
+        { title: '', key: 'action', sortable: false },
       ],
       headers: [
-        {   
-          title: "ID",
-          key: "id",
-        },
-        {   
-          title: "Nome",
-          key: "nome",
-        },
-        {
-          title: "Empresa",
-          key: "empresa",
-        },
-        {
-          title: "",
-          key: "action",  
-          sortable: false,
-        },
+        { title: 'ID', key: 'id_pessoa' },
+        { title: 'Nome', key: 'nome' },
+        { title: 'E-mail', key: 'email' },
+        { title: 'Telefone', key: 'telefone' },
+        { title: 'Empresa', key: 'empresa' },
+        { title: 'Cidade', key: 'cidade' },
+        { title: '', key: 'action', sortable: false },
       ],
       items: [],
       headersOrcamento: [
@@ -437,7 +412,16 @@ export default {
       this.loading = true;
       try {
         const response = await this.$api.get("/pessoa");
-        this.items = response.response;
+        this.items = (response.response || []).map(p => ({
+          id_pessoa: p.id_pessoa || p.id || null,
+          cpf_cnpj: p.cpf_cnpj || p.cpfCnpj || p.cpf || null,
+          cpfCnpj: p.cpfCnpj || p.cpf_cnpj || p.cpf || null,
+          nome: p.nome,
+          email: p.email,
+          telefone: p.telefone,
+          empresa: p.empresa,
+          cidade: p.cidade,
+        }));
       } catch (error) {
         console.error("Erro ao carregar itens:", error);
       } finally {
@@ -504,7 +488,12 @@ export default {
 
     async create(dadosFormulario) {
       try {
-        await this.$api.post("/pessoa/create", dadosFormulario);
+        const payload = { 
+          ...dadosFormulario, 
+          tipo: 'Cliente',
+          cpfCnpj: dadosFormulario.cpf_cnpj || dadosFormulario.cpfCnpj || null,
+        };
+        await this.$api.post("/pessoa/create", payload);
         console.log("Criando item");
         await this.getItems();
         this.fecharFormulario();
@@ -515,7 +504,13 @@ export default {
 
     async edit(dadosFormulario) {
       try {
-        await this.$api.patch(`/pessoa/update/${dadosFormulario.id}`, dadosFormulario);
+        const id = dadosFormulario.id_pessoa || dadosFormulario.id;
+        const payload = { 
+          ...dadosFormulario, 
+          tipo: 'Cliente',
+          cpfCnpj: dadosFormulario.cpf_cnpj || dadosFormulario.cpfCnpj || null,
+        };
+        await this.$api.patch(`/pessoa/update/${id}`, payload);
         console.log("Editando item");
         await this.getItems();
         this.fecharFormularioEdicao();
@@ -556,7 +551,14 @@ export default {
       this.loading = true;
       try {
         const response = await this.$api.get("/usuario");
-        this.itemsUsuarios = response.response;
+        // Normalizar campos para o frontend conforme o schema
+        this.itemsUsuarios = (response.response || []).map(u => ({
+          id_usuario: u.id_usuario || u.id || null,
+          id_pessoa: u.id_pessoa || u.idPessoa || u.id_pessoa || null,
+          nome: u.nome,
+          email: u.email,
+          tipo: u.tipo || 'Colaborador',
+        }));
       } catch (error) {
         console.error("Erro ao carregar usuários:", error);
       } finally {
@@ -569,7 +571,17 @@ export default {
       this.loading = true;
       try {
         const response = await this.$api.get("/pessoa");
-        this.pessoas = response.response;
+        // Normalizar pessoas para garantir que cada item tenha id_pessoa numérico
+        this.pessoas = (response.response || []).map(p => ({
+          id_pessoa: p.id_pessoa || p.id || null,
+          cpf_cnpj: p.cpf_cnpj || p.cpfCnpj || p.cpf || null,
+          cpfCnpj: p.cpfCnpj || p.cpf_cnpj || p.cpf || null,
+          nome: p.nome,
+          email: p.email,
+          telefone: p.telefone,
+          empresa: p.empresa,
+          cidade: p.cidade,
+        }));
       } catch (error) {
         console.error("Erro ao carregar pessoas:", error);
       } finally {
@@ -585,7 +597,7 @@ export default {
         idPessoa: item.id_pessoa || item.idPessoa || item.idPessoa,
         nome: item.nome,
         email: item.email,
-        senha: item.senha || null,
+        senha: item.senha || '',
         tipo: item.tipo || 'Colaborador',
       };
       this.ativoUsuario2 = true;
@@ -595,6 +607,7 @@ export default {
       try {
         const payload = {
           id_pessoa: dadosFormulario.idPessoa,
+          idPessoa: dadosFormulario.idPessoa,
           nome: dadosFormulario.nome,
           email: dadosFormulario.email,
           senha: dadosFormulario.senha,
@@ -614,11 +627,16 @@ export default {
         const id = dadosFormulario.id_usuario || dadosFormulario.id;
         const payload = {
           id_pessoa: dadosFormulario.idPessoa,
+          idPessoa: dadosFormulario.idPessoa,
           nome: dadosFormulario.nome,
           email: dadosFormulario.email,
-          senha: dadosFormulario.senha,
           tipo: dadosFormulario.tipo || 'Colaborador',
         };
+        // só enviar senha se o usuário preencheu um novo valor
+        if (dadosFormulario.senha && String(dadosFormulario.senha).trim() !== '') {
+          payload.senha = dadosFormulario.senha;
+        }
+
         await this.$api.patch(`/usuario/update/${id}`, payload);
         console.log("Editando usuário");
         await this.getItemsUsuarios();
