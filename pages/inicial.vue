@@ -52,6 +52,8 @@
           Atalhos
         </h2>
 
+        
+
         <v-row>
           <v-col
             v-for="shortcut in shortcuts"
@@ -97,6 +99,20 @@
             @editou="editItem" 
             @deletou="deleteItem"
             @abrir-dialog="abrirCriar" 
+          />
+        </v-dialog>
+
+        <!-- Dialog/subtela de Orçamentos (abre como as demais) -->
+        <v-dialog v-model="showTabelaOrcamento" max-width="1200">
+          <TabelaComponent 
+            titulo="Orçamento"
+            height="600"
+            class="mt-13"
+            :items="itemsOrcamento"
+            :headers="headersOrcamento || headers" 
+            @editou="openEditOrcamento"
+            @deletou="deleteOrcamento"
+            @abrir-dialog="abrirCriarOrcamento"
           />
         </v-dialog>
 
@@ -147,6 +163,24 @@
           @salvar="editUsuario"
         />
 
+        <!-- Formulários de Orçamento (criar e editar) -->
+        <FormularioOrcamentoComponent
+          :ativo="ativoOrcamento"
+          :modo-edicao="false"
+          :pessoas="pessoas"
+          @fechar="fecharFormularioOrcamento"
+          @salvar="createOrcamento"
+        />
+
+        <FormularioOrcamentoComponent
+          :ativo="ativoOrcamento2"
+          :modo-edicao="true"
+          :item-edicao="orcamentoEdicao"
+          :pessoas="pessoas"
+          @fechar="fecharFormularioEdicaoOrcamento"
+          @salvar="editOrcamento"
+        />
+
       </v-container>
     </v-main>
   </v-app>
@@ -156,12 +190,14 @@
 import TabelaComponent from '~/components/TabelaComponent.vue';
 import FormularioComponent from '~/components/FormularioComponent.vue';
 import FormularioUsuarioComponent from '~/components/FormularioUsuarioComponent.vue';
+import FormularioOrcamentoComponent from '~/components/FormularioOrcamentoComponent.vue';
 
 export default {
   components: {
     TabelaComponent,
     FormularioComponent,
     FormularioUsuarioComponent,
+    FormularioOrcamentoComponent,
   },
   
   data() {
@@ -172,8 +208,12 @@ export default {
       tab: 1,
       valor: 0,
       showTabela: false,
+  showTabelaOrcamento: false,
       ativo: false,
       ativo2: false,
+  ativoOrcamento: false,
+  ativoOrcamento2: false,
+  orcamentoEdicao: null,
       loading: false,
       textoUsuario: null,
       search: "",
@@ -227,12 +267,26 @@ export default {
         },
       ],
       items: [],
+      headersOrcamento: [
+        { title: 'ID', key: 'id' },
+        { title: 'Descrição', key: 'descricao' },
+        { title: 'Valor Estimado', key: 'valorEstimado' },
+        { title: 'Data', key: 'data' },
+        { title: '', key: 'action', sortable: false },
+      ],
+    itemsOrcamento: [],
       navigationItems: [
         {
           title: 'Clientes',
           description: 'Consulte, adicione e gerencie sua base de clientes.',
           icon: 'mdi-account-group',
           route: '/clientes'
+        },
+        {
+          title: 'Orçamento',
+          description: 'Crie e gerencie orçamentos.',
+          icon: 'mdi-file-document-outline',
+          route: '/orcamento'
         },
         {
           title: 'Obras',
@@ -292,7 +346,9 @@ export default {
   },
 
   async created() {
-    this.checkMobile();
+    if (typeof window !== 'undefined') {
+      this.checkMobile();
+    }
   },
 
   mounted() {
@@ -332,6 +388,16 @@ export default {
             console.error('Erro ao carregar dados de usuários:', error);
           }
         }
+      } else if (route === '/orcamento') {
+        this.showTabelaOrcamento = !this.showTabelaOrcamento;
+        if (this.showTabelaOrcamento && this.itemsOrcamento.length === 0) {
+          try {
+            await this.getItemsOrcamento();
+            await this.getPessoas();
+          } catch (error) {
+            console.error('Erro ao carregar dados de orçamentos:', error);
+          }
+        }
       } else {
         try {
           await this.$router.push(route);
@@ -343,6 +409,19 @@ export default {
 
     abrirCriar() {
       this.ativo = true;
+    },
+
+    abrirCriarOrcamento() {
+      this.ativoOrcamento = true;
+    },
+
+    fecharFormularioOrcamento() {
+      this.ativoOrcamento = false;
+    },
+
+    fecharFormularioEdicaoOrcamento() {
+      this.ativoOrcamento2 = false;
+      this.orcamentoEdicao = null;
     },
 
     fecharFormulario() {
@@ -364,6 +443,57 @@ export default {
       } finally {
         this.loading = false;
         console.log("dados carregados");
+      }
+    },
+
+    async getItemsOrcamento() {
+      this.loading = true;
+      try {
+        const response = await this.$api.get('/orcamento');
+        this.itemsOrcamento = response.response;
+      } catch (error) {
+        console.error('Erro ao carregar orçamentos:', error);
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    openEditOrcamento(item) {
+      this.orcamentoEdicao = { ...item };
+      this.ativoOrcamento2 = true;
+    },
+
+    async createOrcamento(dadosFormulario) {
+      try {
+        await this.$api.post('/orcamento/create', dadosFormulario);
+        await this.getItemsOrcamento();
+        this.fecharFormularioOrcamento();
+      } catch (error) {
+        console.error('Erro ao criar orçamento:', error);
+      }
+    },
+
+    async editOrcamento(dadosFormulario) {
+      try {
+        await this.$api.patch(`/orcamento/update/${dadosFormulario.id}`, dadosFormulario);
+        await this.getItemsOrcamento();
+        this.fecharFormularioEdicaoOrcamento();
+      } catch (error) {
+        console.error('Erro ao editar orçamento:', error);
+      }
+    },
+
+    async deleteOrcamento(item) {
+      if (confirm(`Deseja deletar o registro com ID ${item.id}?`)) {
+        this.loading = true;
+        try {
+          await this.$api.delete(`/orcamento/delete/${item.id}`);
+          await this.getItemsOrcamento();
+        } catch (error) {
+          console.error('Erro ao excluir orçamento:', error);
+        } finally {
+          this.loading = false;
+        }
       }
     },
 
@@ -449,13 +579,28 @@ export default {
     },
 
     editItemUsuario(item) {
-      this.usuarioEdicao = { ...item };
+      // garantir que usamos os nomes esperados pelo backend
+      this.usuarioEdicao = {
+        id_usuario: item.id_usuario || item.id,
+        idPessoa: item.id_pessoa || item.idPessoa || item.idPessoa,
+        nome: item.nome,
+        email: item.email,
+        senha: item.senha || null,
+        tipo: item.tipo || 'Colaborador',
+      };
       this.ativoUsuario2 = true;
     },
 
     async createUsuario(dadosFormulario) {
       try {
-        await this.$api.post("/usuario/create", dadosFormulario);
+        const payload = {
+          id_pessoa: dadosFormulario.idPessoa,
+          nome: dadosFormulario.nome,
+          email: dadosFormulario.email,
+          senha: dadosFormulario.senha,
+          tipo: dadosFormulario.tipo || 'Colaborador',
+        };
+        await this.$api.post("/usuario/create", payload);
         console.log("Criando usuário");
         await this.getItemsUsuarios();
         this.fecharFormularioUsuario();
@@ -466,7 +611,15 @@ export default {
 
     async editUsuario(dadosFormulario) {
       try {
-        await this.$api.patch(`/usuario/update/${dadosFormulario.id}`, dadosFormulario);
+        const id = dadosFormulario.id_usuario || dadosFormulario.id;
+        const payload = {
+          id_pessoa: dadosFormulario.idPessoa,
+          nome: dadosFormulario.nome,
+          email: dadosFormulario.email,
+          senha: dadosFormulario.senha,
+          tipo: dadosFormulario.tipo || 'Colaborador',
+        };
+        await this.$api.patch(`/usuario/update/${id}`, payload);
         console.log("Editando usuário");
         await this.getItemsUsuarios();
         this.fecharFormularioEdicaoUsuario();
@@ -476,10 +629,11 @@ export default {
     },
 
     async deleteItemUsuario(item) {
-      if (confirm(`Deseja deletar o usuário com ID ${item.id}?`)) {
+      const id = item.id_usuario || item.id;
+      if (confirm(`Deseja deletar o usuário com ID ${id}?`)) {
         this.loading = true;
         try {
-          await this.$api.delete(`/usuario/delete/${item.id}`);
+          await this.$api.delete(`/usuario/delete/${id}`);
           console.log("Deletando usuário");
           await this.getItemsUsuarios();
         } catch (error) {

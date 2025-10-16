@@ -16,42 +16,42 @@
         <v-row>
           <v-col>
             <v-text-field 
-                  v-model="formulario.nome"
-                  placeholder="Nome"
-                  item-title="label" 
-                  item-value="nome"
+              v-model="formulario.descricao"
+              placeholder="Descrição"
+              item-title="label" 
+              item-value="descricao"
             />
           </v-col>
         </v-row>
         <v-row>
           <v-col>
             <v-text-field 
-              v-model="formulario.email"
-              placeholder="Email"
-              type="email"
+              v-model="formulario.valorEstimado"
+              placeholder="Valor Estimado"
+              type="number"
               item-title="label" 
-              item-value="email"
+              item-value="valorEstimado"
             />
           </v-col>
         </v-row>
         <v-row>
           <v-col>
             <v-text-field 
-              v-model="formulario.senha"
-              placeholder="Senha"
-              type="password"
+              v-model="formulario.data"
+              placeholder="Data"
+              type="date"
               item-title="label" 
-              item-value="senha"
+              item-value="data"
             />
           </v-col>
         </v-row>
         <v-row>
           <v-col>
-            <v-select
-              v-model="formulario.tipo"
-              :items="['Administrador','Colaborador']"
-              label="Tipo"
-              placeholder="Tipo"
+            <v-text-field 
+              v-model="formulario.status"
+              placeholder="Status"
+              item-title="label" 
+              item-value="status"
             />
           </v-col>
         </v-row>
@@ -88,7 +88,7 @@
 
 <script>
 export default {
-  name: "FormularioUsuarioComponent",
+  name: "FormularioOrcamentoComponent",
   
   props: {
     ativo: {
@@ -115,12 +115,11 @@ export default {
     return {
       loading: false,
       formulario: {
-        id_usuario: null,
+        descricao: null,
+        valorEstimado: null,
+        data: null,
+        status: null,
         idPessoa: null,
-        nome: null,
-        email: null,
-        senha: null,
-        tipo: 'Colaborador',
       },
     };
   },
@@ -160,7 +159,6 @@ export default {
   methods: {
     carregarDados() {
       if (this.modoEdicao && this.itemEdicao) {
-        // map server fields to form where necessary
         this.formulario = { ...this.itemEdicao };
       } else {
         this.resetFormulario();
@@ -168,13 +166,12 @@ export default {
     },
 
     resetFormulario() {
-        this.formulario = {
-        id_usuario: null,
+      this.formulario = {
+        descricao: null,
+        valorEstimado: null,
+        data: null,
+        status: null,
         idPessoa: null,
-        nome: null,
-        email: null,
-        senha: null,
-        tipo: 'Colaborador',
       };
     },
 
