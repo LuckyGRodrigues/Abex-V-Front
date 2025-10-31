@@ -119,6 +119,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    defaultTipo: {
+      type: String,
+      default: null,
+    },
   },
 
   emits: ["fechar", "salvar"],
@@ -127,7 +131,6 @@ export default {
     return {
       loading: false,
       formulario: {
-        id_pessoa: null,
         cpfCnpj: null,
         nome: null,
         email: null,
@@ -174,9 +177,8 @@ export default {
   methods: {
     carregarDados() {
       if (this.modoEdicao && this.itemEdicao) {
-        // map server fields to form fields
         this.formulario = {
-          id_pessoa: this.itemEdicao.id_pessoa || this.itemEdicao.id || null,
+          idPessoa: this.itemEdicao.id,
           cpfCnpj: this.itemEdicao.cpfCnpj || this.itemEdicao.cpf || null,
           nome: this.itemEdicao.nome || null,
           email: this.itemEdicao.email || null,
@@ -187,12 +189,15 @@ export default {
         };
       } else {
         this.resetFormulario();
+        if (this.defaultTipo) {
+          this.formulario.tipo = this.defaultTipo;
+        }
       }
     },
 
     resetFormulario() {
         this.formulario = {
-        id_pessoa: null,
+        idPessoa: null,
         cpfCnpj: null,
         nome: null,
         email: null,
@@ -208,7 +213,6 @@ export default {
     },
 
     salvar() {
-      // Enviar ambos os formatos (snake_case e camelCase) para compatibilidade
       this.$emit("salvar", { ...this.formulario, cpfCnpj: this.formulario.cpfCnpj });
     },
   },

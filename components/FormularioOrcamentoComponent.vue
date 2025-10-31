@@ -47,22 +47,22 @@
         </v-row>
         <v-row>
           <v-col>
-            <v-text-field 
+            <v-select
               v-model="formulario.status"
+              :items="statusOptions"
+              label="Status"
               placeholder="Status"
-              item-title="label" 
-              item-value="status"
             />
           </v-col>
         </v-row>
         <v-row>
           <v-col>
             <v-autocomplete 
-              v-model="formulario.idPessoa"
+              v-model="formulario.id_pessoa"
               :items="pessoas" 
               placeholder="Pessoa vinculada"
               item-title="nome" 
-              item-value="id"
+              item-value="idPessoa"
             />
           </v-col>
         </v-row>
@@ -118,9 +118,10 @@ export default {
         descricao: null,
         valorEstimado: null,
         data: null,
-        status: null,
+          status: 'Levantamento',
         idPessoa: null,
       },
+        statusOptions: ['Levantamento', 'Enviado', 'Aguardando Resposta', 'Fechado', 'Cancelado'],
     };
   },
 

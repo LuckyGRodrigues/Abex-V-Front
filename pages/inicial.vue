@@ -102,6 +102,34 @@
           />
         </v-dialog>
 
+        <!-- Dialog/subtela de Fornecedores (igual à de Cliente, com tipo=Fornecedor) -->
+        <v-dialog v-model="showTabelaFornecedores" max-width="1200">
+          <TabelaComponent
+            titulo="Fornecedor"
+            height="600"
+            class="mt-13"
+            :items="fornecedores"
+            :headers="headers"
+            @editou="openEditFornecedor"
+            @deletou="deleteFornecedor"
+            @abrir-dialog="abrirCriarFornecedor"
+          />
+        </v-dialog>
+
+        <!-- Dialog/subtela de Colaboradores -->
+        <v-dialog v-model="showTabelaColaboradores" max-width="1200">
+          <TabelaComponent
+            titulo="Colaborador"
+            height="600"
+            class="mt-13"
+            :items="colaboradores"
+            :headers="headers"
+            @editou="openEditColaborador"
+            @deletou="deleteColaborador"
+            @abrir-dialog="abrirCriarColaborador"
+          />
+        </v-dialog>
+
         <!-- Dialog/subtela de Orçamentos (abre como as demais) -->
         <v-dialog v-model="showTabelaOrcamento" max-width="1200">
           <TabelaComponent 
@@ -123,12 +151,48 @@
           @salvar="create"
         />
 
+        <!-- Formulário Fornecedor: criar -->
+        <FormularioComponent
+          :ativo="ativoFornecedor"
+          :modo-edicao="false"
+          :default-tipo="'Fornecedor'"
+          @fechar="fecharFormularioFornecedor"
+          @salvar="createFornecedor"
+        />
+
+        <!-- Formulário Colaborador: criar -->
+        <FormularioComponent
+          :ativo="ativoColaborador"
+          :modo-edicao="false"
+          :default-tipo="'Colaborador'"
+          @fechar="fecharFormularioColaborador"
+          @salvar="createColaborador"
+        />
+
         <FormularioComponent
           :ativo="ativo2"
           :modo-edicao="true"
           :item-edicao="pessoaEdicao"
           @fechar="fecharFormularioEdicao"
           @salvar="edit"
+        />
+
+        <!-- Formulário Fornecedor: editar -->
+        <FormularioComponent
+          :ativo="ativoFornecedor2"
+          :modo-edicao="true"
+          :item-edicao="fornecedorEdicao"
+          @fechar="fecharFormularioEdicaoFornecedor"
+          @salvar="editFornecedor"
+        />
+
+        <!-- Formulário Colaborador: editar -->
+        <FormularioComponent
+          :ativo="ativoColaborador2"
+          :modo-edicao="true"
+          :item-edicao="colaboradorEdicao"
+          @fechar="fecharFormularioEdicaoColaborador"
+          @salvar="editColaborador"
         />
 
         <v-divider class="my-8" />
@@ -204,6 +268,16 @@ export default {
     return {
       drawer: false,
       userName: 'Fulano',
+            // Fornecedores
+            showTabelaFornecedores: false,
+            ativoFornecedor: false,
+            ativoFornecedor2: false,
+            fornecedorEdicao: null,
+            // Colaboradores
+            showTabelaColaboradores: false,
+            ativoColaborador: false,
+            ativoColaborador2: false,
+            colaboradorEdicao: null,
       mobile: false,
       tab: 1,
       valor: 0,
@@ -293,6 +367,12 @@ export default {
           icon: 'mdi-account-cog',
           route: '/usuarios'
         },
+          {
+            title: 'Colaborador',
+            description: 'Gerencie colaboradores e seus acessos.',
+            icon: 'mdi-account-tie',
+            route: '/colaboradores'
+          },
         {
           title: 'Configurações',
           description: 'Ajuste as preferências e parâmetros gerais do sistema.',
@@ -309,7 +389,14 @@ export default {
     },
     shortcuts() {
       return this.navigationItems;
-    }
+    },
+    fornecedores() {
+      // filtra items que tenham tipo = Fornecedor
+      return (this.items || []).filter(i => i.tipo === 'Fornecedor');
+    },
+    colaboradores() {
+      return (this.items || []).filter(i => i.tipo === 'Colaborador');
+    },
   },
 
   watch: {
@@ -353,6 +440,24 @@ export default {
             console.error('Erro ao carregar dados:', error);
           }
         }
+      } else if (route === '/fornecedores') {
+        this.showTabelaFornecedores = !this.showTabelaFornecedores;
+        if (this.showTabelaFornecedores && this.items.length === 0) {
+          try {
+            await this.getItems();
+          } catch (error) {
+            console.error('Erro ao carregar fornecedores:', error);
+          }
+        }
+      } else if (route === '/colaboradores') {
+        this.showTabelaColaboradores = !this.showTabelaColaboradores;
+        if (this.showTabelaColaboradores && this.items.length === 0) {
+          try {
+            await this.getItems();
+          } catch (error) {
+            console.error('Erro ao carregar colaboradores:', error);
+          }
+        }
       } else if (route === '/usuarios') {
         this.showTabelaUsuarios = !this.showTabelaUsuarios;
         if (this.showTabelaUsuarios && this.itemsUsuarios.length === 0) {
@@ -380,6 +485,12 @@ export default {
           console.error('Erro na navegação:', error);
         }
       }
+    },
+
+    // atalho para abrir fornecedores
+    async handleNavigationFornecedores(route) {
+      // kept for backwards-compat if needed
+      return this.handleNavigation(route);
     },
 
     abrirCriar() {
@@ -421,6 +532,7 @@ export default {
           telefone: p.telefone,
           empresa: p.empresa,
           cidade: p.cidade,
+          tipo: p.tipo || p.tipo_pessoa || 'Cliente',
         }));
       } catch (error) {
         console.error("Erro ao carregar itens:", error);
@@ -449,7 +561,13 @@ export default {
 
     async createOrcamento(dadosFormulario) {
       try {
-        await this.$api.post('/orcamento/create', dadosFormulario);
+        const payload = {
+          ...dadosFormulario,
+          id_pessoa: dadosFormulario.idPessoa || dadosFormulario.id_pessoa || null,
+          idPessoa: dadosFormulario.idPessoa || dadosFormulario.id_pessoa || null,
+        };
+
+        await this.$api.post('/orcamento/create', payload);
         await this.getItemsOrcamento();
         this.fecharFormularioOrcamento();
       } catch (error) {
@@ -459,7 +577,18 @@ export default {
 
     async editOrcamento(dadosFormulario) {
       try {
-        await this.$api.patch(`/orcamento/update/${dadosFormulario.id}`, dadosFormulario);
+        const payload = {
+          ...dadosFormulario,
+          id_pessoa: dadosFormulario.idPessoa || dadosFormulario.id_pessoa || null,
+          idPessoa: dadosFormulario.idPessoa || dadosFormulario.id_pessoa || null,
+        };
+        if (payload.id_pessoa) payload.id_pessoa = Number(payload.id_pessoa);
+        if (payload.idPessoa) payload.idPessoa = Number(payload.idPessoa);
+
+        const allowed = ['Levantamento', 'Enviado', 'Aguardando Resposta', 'Fechado', 'Cancelado'];
+        if (!allowed.includes(payload.status)) payload.status = 'Levantamento';
+
+        await this.$api.patch(`/orcamento/update/${dadosFormulario.id}`, payload);
         await this.getItemsOrcamento();
         this.fecharFormularioEdicaoOrcamento();
       } catch (error) {
@@ -504,11 +633,11 @@ export default {
 
     async edit(dadosFormulario) {
       try {
-        const id = dadosFormulario.id_pessoa || dadosFormulario.id;
+        const id = dadosFormulario.id;
         const payload = { 
           ...dadosFormulario, 
           tipo: 'Cliente',
-          cpfCnpj: dadosFormulario.cpf_cnpj || dadosFormulario.cpfCnpj || null,
+          cpfCnpj:   dadosFormulario.cpfCnpj || null,
         };
         await this.$api.patch(`/pessoa/update/${id}`, payload);
         console.log("Editando item");
@@ -520,10 +649,18 @@ export default {
     },
 
     async deleteItem(item) {
-      if (confirm(`Deseja deletar o registro com ID ${item.id}?`)) {
+      // identificar o id correto (backend usa id numérico em id ou id_pessoa)
+      const idToDelete = item.id_pessoa || item.id || item.id_pessoa || null;
+      if (!idToDelete) {
+        alert('ID não encontrado para exclusão.');
+        return;
+      }
+
+      if (confirm(`Deseja deletar o registro com ID ${idToDelete}?`)) {
         this.loading = true;
         try {
-          await this.$api.delete(`/pessoa/delete/${item.id}`);
+          console.log('Enviando DELETE para /pessoa/delete/', idToDelete);
+          await this.$api.delete(`/pessoa/delete/${idToDelete}`);
           console.log("Deletando item");
           await this.getItems();
         } catch (error) {
@@ -536,6 +673,158 @@ export default {
 
     abrirCriarUsuario() {
       this.ativoUsuario = true;
+    },
+
+    // Fornecedores helpers
+    abrirCriarFornecedor() {
+      this.ativoFornecedor = true;
+    },
+
+    fecharFormularioFornecedor() {
+      this.ativoFornecedor = false;
+    },
+
+    fecharFormularioEdicaoFornecedor() {
+      this.ativoFornecedor2 = false;
+      this.fornecedorEdicao = null;
+    },
+
+    async createFornecedor(dadosFormulario) {
+      try {
+        const payload = {
+          ...dadosFormulario,
+          tipo: 'Fornecedor',
+          cpfCnpj: dadosFormulario.cpf_cnpj || dadosFormulario.cpfCnpj || null,
+        };
+        await this.$api.post('/pessoa/create', payload);
+        await this.getItems();
+        this.fecharFormularioFornecedor();
+      } catch (error) {
+        console.error('Erro ao criar fornecedor:', error);
+      }
+    },
+
+    async editFornecedor(dadosFormulario) {
+      try {
+        const id = dadosFormulario.id || dadosFormulario.id_pessoa || dadosFormulario.idPessoa;
+        if (!id) {
+          alert('ID do fornecedor não informado para edição.');
+          return;
+        }
+        const payload = {
+          ...dadosFormulario,
+          tipo: 'Fornecedor',
+          cpfCnpj: dadosFormulario.cpfCnpj || dadosFormulario.cpf_cnpj || null,
+        };
+        await this.$api.patch(`/pessoa/update/${id}`, payload);
+        await this.getItems();
+        this.fecharFormularioEdicaoFornecedor();
+      } catch (error) {
+        console.error('Erro ao editar fornecedor:', error);
+      }
+    },
+
+    openEditFornecedor(item) {
+      this.fornecedorEdicao = { 
+        ...item,
+        id: item.id_pessoa || item.id || item.id_pessoa,
+      };
+      this.ativoFornecedor2 = true;
+    },
+
+    async deleteFornecedor(item) {
+      const idToDelete = item.id_pessoa || item.id || null;
+      if (!idToDelete) {
+        alert('ID não encontrado para exclusão.');
+        return;
+      }
+      if (confirm(`Deseja deletar o fornecedor com ID ${idToDelete}?`)) {
+        this.loading = true;
+        try {
+          await this.$api.delete(`/pessoa/delete/${idToDelete}`);
+          await this.getItems();
+        } catch (error) {
+          console.error('Erro ao excluir fornecedor:', error);
+        } finally {
+          this.loading = false;
+        }
+      }
+    },
+
+    // Colaboradores helpers
+    abrirCriarColaborador() {
+      this.ativoColaborador = true;
+    },
+
+    fecharFormularioColaborador() {
+      this.ativoColaborador = false;
+    },
+
+    fecharFormularioEdicaoColaborador() {
+      this.ativoColaborador2 = false;
+      this.colaboradorEdicao = null;
+    },
+
+    async createColaborador(dadosFormulario) {
+      try {
+        const payload = {
+          ...dadosFormulario,
+          tipo: 'Colaborador',
+          cpfCnpj: dadosFormulario.cpf_cnpj || dadosFormulario.cpfCnpj || null,
+        };
+        await this.$api.post('/pessoa/create', payload);
+        await this.getItems();
+        this.fecharFormularioColaborador();
+      } catch (error) {
+        console.error('Erro ao criar colaborador:', error);
+      }
+    },
+
+    async editColaborador(dadosFormulario) {
+      try {
+        const id = dadosFormulario.id || dadosFormulario.id_pessoa || dadosFormulario.idPessoa;
+        if (!id) {
+          alert('ID do colaborador não informado para edição.');
+          return;
+        }
+        const payload = {
+          ...dadosFormulario,
+          tipo: 'Colaborador',
+          cpfCnpj: dadosFormulario.cpfCnpj || dadosFormulario.cpf_cnpj || null,
+        };
+        await this.$api.patch(`/pessoa/update/${id}`, payload);
+        await this.getItems();
+        this.fecharFormularioEdicaoColaborador();
+      } catch (error) {
+        console.error('Erro ao editar colaborador:', error);
+      }
+    },
+
+    async deleteColaborador(item) {
+      const idToDelete = item.id_pessoa || item.id || null;
+      if (!idToDelete) {
+        alert('ID não encontrado para exclusão.');
+        return;
+      }
+      if (confirm(`Deseja deletar o colaborador com ID ${idToDelete}?`)) {
+        this.loading = true;
+        try {
+          await this.$api.delete(`/pessoa/delete/${idToDelete}`);
+          await this.getItems();
+        } catch (error) {
+          console.error('Erro ao excluir colaborador:', error);
+        } finally {
+          this.loading = false;
+        }
+      }
+    },
+
+    openEditColaborador(item) {
+      this.colaboradorEdicao = { 
+        ...item,
+        id: item.id_pessoa || item.id || item.id_pessoa,
+      };
+      this.ativoColaborador2 = true;
     },
 
     fecharFormularioUsuario() {
@@ -571,10 +860,8 @@ export default {
       this.loading = true;
       try {
         const response = await this.$api.get("/pessoa");
-        // Normalizar pessoas para garantir que cada item tenha id_pessoa numérico
         this.pessoas = (response.response || []).map(p => ({
-          id_pessoa: p.id_pessoa || p.id || null,
-          cpf_cnpj: p.cpf_cnpj || p.cpfCnpj || p.cpf || null,
+          idPessoa: p.idPessoa || p.id || null,
           cpfCnpj: p.cpfCnpj || p.cpf_cnpj || p.cpf || null,
           nome: p.nome,
           email: p.email,
@@ -591,10 +878,9 @@ export default {
     },
 
     editItemUsuario(item) {
-      // garantir que usamos os nomes esperados pelo backend
       this.usuarioEdicao = {
-        id_usuario: item.id_usuario || item.id,
-        idPessoa: item.id_pessoa || item.idPessoa || item.idPessoa,
+        id:  item.id,
+        idPessoa: item.cpfCnpj || item.idPessoa || item.idPessoa,
         nome: item.nome,
         email: item.email,
         senha: item.senha || '',
@@ -632,7 +918,6 @@ export default {
           email: dadosFormulario.email,
           tipo: dadosFormulario.tipo || 'Colaborador',
         };
-        // só enviar senha se o usuário preencheu um novo valor
         if (dadosFormulario.senha && String(dadosFormulario.senha).trim() !== '') {
           payload.senha = dadosFormulario.senha;
         }

@@ -71,7 +71,7 @@
               :items="pessoas" 
               placeholder="Pessoa vinculada"
               item-title="nome" 
-              item-value="id_pessoa"
+              item-value="idPessoa"
             />
           </v-col>
         </v-row>

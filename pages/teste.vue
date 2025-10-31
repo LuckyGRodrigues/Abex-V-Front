@@ -136,7 +136,17 @@
 
         async create(dadosFormulario) {
           try {
-            await this.$api.post("/orcamento/create", dadosFormulario);
+            const payload = {
+              ...dadosFormulario,
+              id_pessoa: dadosFormulario.idPessoa || dadosFormulario.id_pessoa || null,
+              idPessoa: dadosFormulario.idPessoa || dadosFormulario.id_pessoa || null,
+            };
+            if (payload.id_pessoa) payload.id_pessoa = Number(payload.id_pessoa);
+            if (payload.idPessoa) payload.idPessoa = Number(payload.idPessoa);
+            const allowed = ['Levantamento', 'Enviado', 'Aguardando Resposta', 'Fechado', 'Cancelado'];
+            if (!allowed.includes(payload.status)) payload.status = 'Levantamento'; 
+
+            await this.$api.post("/orcamento/create", payload);
             console.log("Criando item");
             await this.getItems();
             this.fecharFormulario();
@@ -147,7 +157,17 @@
 
         async edit(dadosFormulario) {
           try {
-            await this.$api.patch(`/orcamento/update/${dadosFormulario.id}`, dadosFormulario);
+            const payload = {
+              ...dadosFormulario,
+              id_pessoa: dadosFormulario.idPessoa || dadosFormulario.id_pessoa || null,
+              idPessoa: dadosFormulario.idPessoa || dadosFormulario.id_pessoa || null,
+            };
+            if (payload.id_pessoa) payload.id_pessoa = Number(payload.id_pessoa);
+            if (payload.idPessoa) payload.idPessoa = Number(payload.idPessoa);
+            const allowed = ['Levantamento', 'Enviado', 'Aguardando Resposta', 'Fechado', 'Cancelado'];
+            if (!allowed.includes(payload.status)) payload.status = 'Levantamento';
+
+            await this.$api.patch(`/orcamento/update/${dadosFormulario.id}`, payload);
             console.log("Editando item");
             await this.getItems();
             this.fecharFormularioEdicao();
