@@ -30,15 +30,22 @@
     </v-navigation-drawer>
 
     <v-app-bar
-      v-if="mobile"
       app
       color="grey-darken-4"
       dark
       elevation="1"
+      style="z-index: 10;"
     >
-      <v-app-bar-nav-icon @click="drawer = !drawer" />
+      <template v-if="mobile">
+        <v-app-bar-nav-icon @click="drawer = !drawer" />
+      </template>
       <v-toolbar-title>Sistema de Gestão</v-toolbar-title>
+      <v-spacer />
+      <v-btn class="font-weight-bold" style="margin-right: 12px;" color="orange" @click="logout">
+        Logout
+      </v-btn>
     </v-app-bar>
+
 
     <v-main>
       <v-container fluid class="pa-6">
@@ -51,9 +58,6 @@
         <h2 class="text-h4 font-weight-bold text-grey-darken-3 mb-6">
           Atalhos
         </h2>
-
-        
-
         <v-row>
           <v-col
             v-for="shortcut in shortcuts"
@@ -945,6 +949,9 @@ export default {
           this.loading = false;
         }
       }
+    },
+    logout() {
+      this.$router.replace('/');
     }
   }
 };

@@ -1,84 +1,83 @@
 <template>
   <v-dialog 
     v-model="dialogAtivo"
-    max-width="400"
+    max-width="500"
     @update:model-value="fecharDialog"
   >
-    <v-card 
-      height="650" 
-      width="400" 
-      theme="dark"
+    <v-card
+      style="border: solid grey 4px; border-radius: 4px; background: #fff;"
+      class="pa-4"
     >
-      <v-card-title>
+      <v-card-title class="text-h6" style="color: #795548;">
         {{ modoEdicao ? 'Editar' : 'Criar' }}
       </v-card-title>
+      <v-divider class="mb-4" />
       <v-card-text>
-        <v-row>
-          <v-col>
+        <v-row dense>
+          <v-col cols="12" sm="6">
             <v-text-field 
-                  v-model="formulario.nome"
-                  placeholder="Nome"
-                  item-title="label" 
-                  item-value="nome"
+              v-model="formulario.nome"
+              label="Nome"
+              outlined
+              dense
             />
           </v-col>
-        </v-row>
-        <v-row>
-          <v-col>
+          <v-col cols="12" sm="6">
             <v-text-field 
               v-model="formulario.email"
-              placeholder="Email"
+              label="Email"
               type="email"
-              item-title="label" 
-              item-value="email"
+              outlined
+              dense
             />
           </v-col>
         </v-row>
-        <v-row>
-          <v-col>
-            <v-row align="center">
-              <v-col cols="8">
-                <v-text-field
-                  v-model="formulario.senha"
-                  placeholder="Senha"
-                  type="password"
-                  :disabled="modoEdicao && !alterarSenha"
-                />
-              </v-col>
-              <v-col cols="4">
-                <v-checkbox
-                  v-model="alterarSenha"
-                  label="Alterar senha"
-                />
-              </v-col>
-            </v-row>
+        <v-row dense>
+          <v-col cols="12" sm="8">
+            <v-text-field
+              v-model="formulario.senha"
+              label="Senha"
+              type="password"
+              outlined
+              dense
+              :disabled="modoEdicao && !alterarSenha"
+            />
+          </v-col>
+          <v-col cols="12" sm="4" class="d-flex align-center">
+            <v-checkbox
+              v-model="alterarSenha"
+              label="Alterar senha"
+              hide-details
+            />
           </v-col>
         </v-row>
-        <v-row>
-          <v-col>
+        <v-row dense>
+          <v-col cols="12" sm="6">
             <v-select
               v-model="formulario.tipo"
               :items="['Administrador','Colaborador']"
               label="Tipo"
-              placeholder="Tipo"
+              outlined
+              dense
             />
           </v-col>
-        </v-row>
-        <v-row>
-          <v-col>
+          <v-col cols="12" sm="6">
             <v-autocomplete 
               v-model="formulario.idPessoa"
               :items="pessoas" 
-              placeholder="Pessoa vinculada"
+              label="Pessoa vinculada"
               item-title="nome" 
               item-value="idPessoa"
+              outlined
+              dense
             />
           </v-col>
         </v-row>
       </v-card-text>
-      <v-card-actions>
+      <v-card-actions class="justify-end">
         <v-btn 
           variant="outlined"
+          color="brown"
           :loading="loading"
           @click="salvar"
         >
@@ -86,6 +85,7 @@
         </v-btn>
         <v-btn 
           variant="outlined" 
+          color="grey"
           @click="fecharDialog"
         >
           Cancelar

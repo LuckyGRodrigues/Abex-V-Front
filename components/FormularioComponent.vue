@@ -1,91 +1,90 @@
 <template>
   <v-dialog 
     v-model="dialogAtivo"
-    max-width="400"
+    max-width="500"
     @update:model-value="fecharDialog"
   >
-    <v-card 
-      height="650" 
-      width="400" 
-      theme="dark"
+    <v-card
+      style="border: solid grey 4px; border-radius: 4px; background: #fff;"
+      class="pa-4"
     >
-      <v-card-title>
+      <v-card-title class="text-h6" style="color: #795548;">
         {{ modoEdicao ? 'Editar' : 'Criar' }}
       </v-card-title>
+  <v-divider class="mb-4" />
       <v-card-text>
-        <v-row>
-          <v-col>
+        <v-row dense>
+          <v-col cols="12" sm="6">
             <v-text-field 
               v-model="formulario.cpfCnpj"
-              placeholder="CPF/CNPJ"
-              item-title="label" 
-              item-value="cpfCnpj"
+              label="CPF/CNPJ"
+              outlined
+              dense
             />
           </v-col>
-          <v-col>
+          <v-col cols="12" sm="6">
             <v-text-field 
               v-model="formulario.nome"
-              placeholder="Nome"
-              item-title="label" 
-              item-value="nome"
+              label="Nome"
+              outlined
+              dense
             />
           </v-col>
         </v-row>
-        <v-row>
-          <v-col>
+        <v-row dense>
+          <v-col cols="12" sm="6">
             <v-text-field 
               v-model="formulario.email"
-              placeholder="Email"
+              label="Email"
               type="email"
-              item-title="label" 
-              item-value="email"
+              outlined
+              dense
             />
           </v-col>
-        </v-row>
-        <v-row>
-          <v-col>
+          <v-col cols="12" sm="6">
             <v-text-field 
               v-model="formulario.telefone"
-              placeholder="Telefone"
-              item-title="label" 
-              item-value="telefone"
+              label="Telefone"
+              outlined
+              dense
             />
           </v-col>
         </v-row>
-        <v-row>
-          <v-col>
+        <v-row dense>
+          <v-col cols="12" sm="6">
             <v-text-field 
               v-model="formulario.empresa"
-              placeholder="Empresa"
-              item-title="label" 
-              item-value="empresa"
+              label="Empresa"
+              outlined
+              dense
             />
           </v-col>
-        </v-row>
-        <v-row>
-          <v-col>
+          <v-col cols="12" sm="6">
             <v-text-field 
               v-model="formulario.cidade"
-              placeholder="Cidade"
-              item-title="label" 
-              item-value="cidade"
+              label="Cidade"
+              outlined
+              dense
             />
           </v-col>
         </v-row>
-        <v-row>
-          <v-col>
+        <v-row dense>
+          <v-col cols="12">
             <v-select
               v-model="formulario.tipo"
               :items="['Cliente','Colaborador','Fornecedor']"
               label="Tipo"
+              outlined
+              dense
               disabled
             />
           </v-col>
         </v-row>
       </v-card-text>
-      <v-card-actions>
+      <v-card-actions class="justify-end">
         <v-btn 
           variant="outlined"
+          color="brown"
           :loading="loading"
           @click="salvar"
         >
@@ -93,6 +92,7 @@
         </v-btn>
         <v-btn 
           variant="outlined" 
+          color="grey"
           @click="fecharDialog"
         >
           Cancelar
