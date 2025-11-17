@@ -21,10 +21,10 @@
       <v-toolbar flat>
         <v-toolbar-title> {{ titulo }} </v-toolbar-title>
         <v-btn
-          style="color: yellow; background-color: brown"
+          style="color: white; background-color: brown; font-size: large;"
           @click="abrirDialog()"
         >
-          New
+          Criar
         </v-btn>
       </v-toolbar>
       <v-text-field

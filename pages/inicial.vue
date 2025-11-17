@@ -41,20 +41,15 @@
       </template>
       <v-toolbar-title>Sistema de Gestão</v-toolbar-title>
       <v-spacer />
-      <v-btn class="font-weight-bold" style="margin-right: 12px;" color="orange" @click="logout">
+      <v-btn class="font-weight-bold" style="margin-right: 12px;" color="white" @click="logout">
         Logout
       </v-btn>
     </v-app-bar>
 
 
     <v-main>
-      <v-container fluid class="pa-6">
-        <div class="text-center mb-8">
-          <h1 class="display-1 font-weight-bold text-grey-darken-3 mb-4">
-            Bem vindo, teste!
-          </h1>
-        </div>
-
+      <!-- adiciona padding-top para evitar que o app-bar sobreponha o conteúdo -->
+      <v-container fluid class="pa-6 page-container">
         <h2 class="text-h4 font-weight-bold text-grey-darken-3 mb-6">
           Atalhos
         </h2>
@@ -653,7 +648,6 @@ export default {
     },
 
     async deleteItem(item) {
-      // identificar o id correto (backend usa id numérico em id ou id_pessoa)
       const idToDelete = item.id_pessoa || item.id || item.id_pessoa || null;
       if (!idToDelete) {
         alert('ID não encontrado para exclusão.');
@@ -679,7 +673,6 @@ export default {
       this.ativoUsuario = true;
     },
 
-    // Fornecedores helpers
     abrirCriarFornecedor() {
       this.ativoFornecedor = true;
     },
@@ -755,7 +748,6 @@ export default {
       }
     },
 
-    // Colaboradores helpers
     abrirCriarColaborador() {
       this.ativoColaborador = true;
     },
@@ -844,7 +836,6 @@ export default {
       this.loading = true;
       try {
         const response = await this.$api.get("/usuario");
-        // Normalizar campos para o frontend conforme o schema
         this.itemsUsuarios = (response.response || []).map(u => ({
           id_usuario: u.id_usuario || u.id || null,
           id_pessoa: u.id_pessoa || u.idPessoa || u.id_pessoa || null,
@@ -961,10 +952,41 @@ export default {
 .shortcut-card {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
 }
 
 .shortcut-card:hover {
   transform: translateY(-4px) scale(1.02);
+}
+
+.shortcut-card .v-card-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 20px !important;
+  padding-top: 28px !important;
+}
+
+.shortcut-card .v-card-text h3 {
+  margin: 8px 0 12px;
+}
+.shortcut-card .v-card-text p {
+  margin: 0;
+  color: #9aa3ad;
+  display: -webkit-box;
+  line-clamp: 3;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.shortcut-card .v-icon {
+  font-size: 56px !important;
+  color: #6b6b6b !important;
+  margin-bottom: 16px !important;
 }
 
 .v-main {
@@ -977,5 +999,15 @@ export default {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+.page-container {
+  padding-top: 72px;
+}
+
+@media (max-width: 960px) {
+  .page-container {
+    padding-top: 56px;
+  }
 }
 </style>

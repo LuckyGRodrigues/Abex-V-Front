@@ -74,7 +74,7 @@ export default {
   body {
     margin: 0;
     font-family: Arial, sans-serif;
-    background: linear-gradient(to bottom, #ffccaa, #ffac75, #ff8431);
+    background: #d9e1ed;
     height: 100vh;
     display: flex;
     justify-content: center;
