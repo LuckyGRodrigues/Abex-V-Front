@@ -170,9 +170,7 @@ export default {
   methods: {
     carregarDados() {
       if (this.modoEdicao && this.itemEdicao) {
-        // map server fields to form where necessary
         this.formulario = { ...this.itemEdicao };
-        // when editing, don't prefill senha for security; require explicit change
         this.formulario.senha = '';
         this.alterarSenha = false;
       } else {
@@ -189,7 +187,7 @@ export default {
         senha: '',
         tipo: 'Colaborador',
       };
-      this.alterarSenha = !this.modoEdicao; // true for create, false for edit
+      this.alterarSenha = !this.modoEdicao;
     },
 
     fecharDialog() {
@@ -198,7 +196,6 @@ export default {
 
     salvar() {
       const payload = { ...this.formulario };
-      // if in edit mode and user didn't opt to change password, don't include senha
       if (this.modoEdicao && !this.alterarSenha) {
         delete payload.senha;
       }

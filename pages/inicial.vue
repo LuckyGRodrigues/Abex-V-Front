@@ -244,6 +244,45 @@
           @salvar="editOrcamento"
         />
 
+        <!-- Dialog/subtela de Obras -->
+        <v-dialog v-model="showTabelaObras" max-width="1200">
+          <TabelaComponent
+            titulo="Obras"
+            height="600"
+            class="mt-13"
+            :items="itemsObras"
+            :headers="headersObras"
+            @editou="openEditObra"
+            @deletou="deleteObra"
+            @abrir-dialog="abrirCriarObra"
+          />
+        </v-dialog>
+
+        <!-- Formulário Obra: criar -->
+        <v-dialog v-model="ativoObra" max-width="600">
+          <v-card height="auto" width="600" theme="dark">
+            <FormularioObraComponent
+              :orcamentos="itemsOrcamento"
+              :usuarios="itemsUsuarios"
+              @salvar="createObra"
+              @cancel="fecharFormularioObra"
+            />
+          </v-card>
+        </v-dialog>
+
+        <!-- Formulário Obra: editar -->
+        <v-dialog v-model="ativoObra2" max-width="600">
+          <v-card height="auto" width="600" theme="dark">
+            <FormularioObraComponent
+              :obra="obraEdicao"
+              :orcamentos="itemsOrcamento"
+              :usuarios="itemsUsuarios"
+              @salvar="editObra"
+              @cancel="fecharFormularioEdicaoObra"
+            />
+          </v-card>
+        </v-dialog>
+
       </v-container>
     </v-main>
   </v-app>
@@ -254,6 +293,7 @@ import TabelaComponent from '~/components/TabelaComponent.vue';
 import FormularioComponent from '~/components/FormularioComponent.vue';
 import FormularioUsuarioComponent from '~/components/FormularioUsuarioComponent.vue';
 import FormularioOrcamentoComponent from '~/components/FormularioOrcamentoComponent.vue';
+import FormularioObraComponent from '~/components/FormularioObraComponent.vue';
 
 export default {
   components: {
@@ -261,18 +301,17 @@ export default {
     FormularioComponent,
     FormularioUsuarioComponent,
     FormularioOrcamentoComponent,
+    FormularioObraComponent,
   },
   
   data() {
     return {
       drawer: false,
       userName: 'Fulano',
-            // Fornecedores
             showTabelaFornecedores: false,
             ativoFornecedor: false,
             ativoFornecedor2: false,
             fornecedorEdicao: null,
-            // Colaboradores
             showTabelaColaboradores: false,
             ativoColaborador: false,
             ativoColaborador2: false,
@@ -282,6 +321,19 @@ export default {
       valor: 0,
       showTabela: false,
   showTabelaOrcamento: false,
+      showTabelaObras: false,
+      ativoObra: false,
+      ativoObra2: false,
+      obraEdicao: null,
+      itemsObras: [],
+      headersObras: [
+        { title: 'ID', key: 'id' },
+        { title: 'Descrição', key: 'descricao' },
+        { title: 'Responsável', key: 'responsavel' },
+        { title: 'Status', key: 'status' },
+        { title: 'Data Início', key: 'dataInicio' },
+        { title: '', key: 'action', sortable: false },
+      ],
       ativo: false,
       ativo2: false,
   ativoOrcamento: false,
@@ -390,7 +442,6 @@ export default {
       return this.navigationItems;
     },
     fornecedores() {
-      // filtra items que tenham tipo = Fornecedor
       return (this.items || []).filter(i => i.tipo === 'Fornecedor');
     },
     colaboradores() {
@@ -406,11 +457,12 @@ export default {
     }
   },
 
-  async created() {
-    if (typeof window !== 'undefined') {
-      this.checkMobile();
-    }
-  },
+    async created() {
+      if (typeof window !== 'undefined') {
+        this.checkMobile();
+      }
+      await this.getItemsObras().catch(() => {});
+    },
 
   mounted() {
     this.drawer = !this.mobile;
@@ -477,6 +529,15 @@ export default {
             console.error('Erro ao carregar dados de orçamentos:', error);
           }
         }
+      } else if (route === '/obras') {
+        this.showTabelaObras = !this.showTabelaObras;
+        if (this.showTabelaObras && this.itemsObras.length === 0) {
+          try {
+            await this.getItemsObras();
+          } catch (error) {
+            console.error('Erro ao carregar dados de obras:', error);
+          }
+        }
       } else {
         try {
           await this.$router.push(route);
@@ -486,9 +547,7 @@ export default {
       }
     },
 
-    // atalho para abrir fornecedores
     async handleNavigationFornecedores(route) {
-      // kept for backwards-compat if needed
       return this.handleNavigation(route);
     },
 
@@ -551,6 +610,92 @@ export default {
       } finally {
         this.loading = false;
       }
+    },
+
+    async getItemsObras() {
+      this.loading = true;
+      try {
+        const response = await this.$api.get('/controle-obras');
+        this.itemsObras = response.response || [];
+      } catch (error) {
+        console.error('Erro ao carregar obras:', error);
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    openEditObra(item) {
+      const loaders = [];
+      if (!this.itemsOrcamento || this.itemsOrcamento.length === 0) loaders.push(this.getItemsOrcamento());
+      if (!this.itemsUsuarios || this.itemsUsuarios.length === 0) loaders.push(this.getItemsUsuarios());
+      Promise.all(loaders).finally(() => {
+        this.obraEdicao = { ...item, id: item.id || item.idObra };
+        this.ativoObra2 = true;
+      });
+    },
+
+    async createObra(dadosFormulario) {
+      try {
+        const payload = { ...dadosFormulario };
+        await this.$api.post('/controle-obras/create', payload);
+        await this.getItemsObras();
+        this.fecharFormularioObra();
+      } catch (error) {
+        console.error('Erro ao criar obra:', error);
+      }
+    },
+
+    async editObra(dadosFormulario) {
+      try {
+        const id = dadosFormulario.id || dadosFormulario.idObra;
+        if (!id) {
+          alert('ID não informado para edição.');
+          return;
+        }
+        const payload = { ...dadosFormulario };
+        await this.$api.patch(`/controle-obras/update/${id}`, payload);
+        await this.getItemsObras();
+        this.fecharFormularioEdicaoObra();
+      } catch (error) {
+        console.error('Erro ao editar obra:', error);
+      }
+    },
+
+    async deleteObra(item) {
+      const idToDelete = item.id || item.idObra || null;
+      if (!idToDelete) {
+        alert('ID não encontrado para exclusão.');
+        return;
+      }
+      if (confirm(`Deseja deletar a obra com ID ${idToDelete}?`)) {
+        this.loading = true;
+        try {
+          await this.$api.delete(`/controle-obras/delete/${idToDelete}`);
+          await this.getItemsObras();
+        } catch (error) {
+          console.error('Erro ao excluir obra:', error);
+        } finally {
+          this.loading = false;
+        }
+      }
+    },
+
+    abrirCriarObra() {
+      const loaders = [];
+      if (!this.itemsOrcamento || this.itemsOrcamento.length === 0) loaders.push(this.getItemsOrcamento());
+      if (!this.itemsUsuarios || this.itemsUsuarios.length === 0) loaders.push(this.getItemsUsuarios());
+      Promise.all(loaders).finally(() => {
+        this.ativoObra = true;
+      });
+    },
+
+    fecharFormularioObra() {
+      this.ativoObra = false;
+    },
+
+    fecharFormularioEdicaoObra() {
+      this.ativoObra2 = false;
+      this.obraEdicao = null;
     },
 
     openEditOrcamento(item) {
